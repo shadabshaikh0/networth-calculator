@@ -1,6 +1,7 @@
 import { css } from "../lib/style";
 import { useStore } from "../store/useStore";
 import type { Derived } from "../lib/derive";
+import SyncButton from "./SyncButton";
 
 export default function TopBar({ d }: { d: Derived }) {
   const setDark = useStore((s) => s.setDark);
@@ -16,6 +17,7 @@ export default function TopBar({ d }: { d: Derived }) {
           <span style={css("font-size:11.5px;color:var(--nw-text3,#8A8A8A);")}>Track everything you own &amp; owe</span>
         </div>
         <div style={{ flex: 1 }} />
+        <SyncButton />
         <div data-noprint style={css("display:inline-flex;background:var(--nw-card,#141414);border:1px solid var(--nw-cardbd,#242424);border-radius:999px;padding:4px;gap:2px;")}>
           <button onClick={setDark} title="Dark" style={css(d.darkBtnStyle)}>
             <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d="M21 12.8A9 9 0 1 1 11.2 3 7 7 0 0 0 21 12.8Z" /></svg>

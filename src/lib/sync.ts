@@ -1,0 +1,111 @@
+import { useStore } from "../store/useStore";
+import { clearToken, fetchUserInfo, requestToken } from "./googleAuth";
+import { createSheet, findSheet, loadAll, saveAll } from "./googleSheets";
+import { googleEnabled } from "./googleConfig";
+
+const SHEET_ID_KEY = "wint_nw_sheetid_v1";
+const ACCOUNT_KEY = "wint_nw_account_v1";
+
+let pushTimer: ReturnType<typeof setTimeout> | null = null;
+let pushInFlight = false;
+let pushQueued = false;
+
+const cacheSheetId = (id: string | null) => {
+  try { id ? localStorage.setItem(SHEET_ID_KEY, id) : localStorage.removeItem(SHEET_ID_KEY); } catch { /* ignore */ }
+};
+const cachedSheetId = () => {
+  try { return localStorage.getItem(SHEET_ID_KEY); } catch { return null; }
+};
+const cacheAccount = (acc: { email?: string; name?: string } | null) => {
+  try { acc ? localStorage.setItem(ACCOUNT_KEY, JSON.stringify(acc)) : localStorage.removeItem(ACCOUNT_KEY); } catch { /* ignore */ }
+};
+
+/** Push the current snapshot to the Sheet; coalesces concurrent calls. */
+async function pushNow() {
+  const st = useStore.getState();
+  if (st.authStatus !== "signedin" || !st.spreadsheetId) return;
+  if (pushInFlight) { pushQueued = true; return; }
+  pushInFlight = true;
+  st.setSync({ syncStatus: "syncing", syncError: null });
+  try {
+    await saveAll(st.spreadsheetId, useStore.getState().snapshot());
+    useStore.getState().setSync({ syncStatus: "synced" });
+  } catch (e) {
+    useStore.getState().setSync({ syncStatus: "error", syncError: (e as Error).message });
+  } finally {
+    pushInFlight = false;
+    if (pushQueued) { pushQueued = false; void pushNow(); }
+  }
+}
+
+/** Debounced push, called on any data change while signed in. */
+function schedulePush() {
+  if (pushTimer) clearTimeout(pushTimer);
+  pushTimer = setTimeout(() => { void pushNow(); }, 1200);
+}
+
+/** Explicit "Sign in with Google" — interactive consent, then reconcile. */
+export async function signIn() {
+  if (!googleEnabled()) return;
+  const store = useStore.getState();
+  store.setSync({ authStatus: "signingin", syncError: null });
+  try {
+    const token = await requestToken(true);
+    const account = await fetchUserInfo(token);
+    cacheAccount(account);
+    store.setSync({ authStatus: "signedin", account });
+
+    // Find (or create) this user's sheet, then reconcile.
+    store.setSync({ syncStatus: "syncing" });
+    let id = cachedSheetId() || (await findSheet());
+    if (id) {
+      // Sheet is the source of truth once it exists.
+      const data = await loadAll(id);
+      useStore.getState().hydrate(data);
+    } else {
+      // First time: create it and push whatever is local.
+      id = await createSheet();
+      await saveAll(id, useStore.getState().snapshot());
+    }
+    cacheSheetId(id);
+    useStore.getState().setSync({ spreadsheetId: id, syncStatus: "synced" });
+  } catch (e) {
+    useStore.getState().setSync({ authStatus: "signedout", syncStatus: "error", syncError: (e as Error).message });
+  }
+}
+
+export function signOut() {
+  clearToken();
+  cacheSheetId(null);
+  cacheAccount(null);
+  if (pushTimer) clearTimeout(pushTimer);
+  useStore.getState().setSync({ authStatus: "signedout", syncStatus: "idle", account: null, spreadsheetId: null, syncError: null });
+}
+
+/**
+ * Wire the store → debounced cloud push. Called once at app start.
+ * Only data-bearing fields trigger a push (not view/modal/theme churn).
+ */
+export function initSync() {
+  if (!googleEnabled()) return;
+
+  // Restore a cached account chip immediately (token still needs a silent grant).
+  try {
+    const raw = localStorage.getItem(ACCOUNT_KEY);
+    if (raw) useStore.getState().setSync({ account: JSON.parse(raw) });
+  } catch { /* ignore */ }
+
+  let prev = snapshotKey(useStore.getState());
+  useStore.subscribe((s) => {
+    const key = snapshotKey(s);
+    if (key !== prev) {
+      prev = key;
+      if (s.authStatus === "signedin") schedulePush();
+    }
+  });
+}
+
+/** Cheap change-detection key over the synced fields only. */
+function snapshotKey(s: ReturnType<typeof useStore.getState>): string {
+  return JSON.stringify([s.assets, s.liab, s.members, s.included, s.rates, s.onboardDismissed]);
+}

@@ -3,6 +3,7 @@ import { css } from "./lib/style";
 import { DARK_VARS, LIGHT_VARS } from "./constants";
 import { derive } from "./lib/derive";
 import { useStore } from "./store/useStore";
+import { initSync } from "./lib/sync";
 import TopBar from "./components/TopBar";
 import EmptyState from "./components/EmptyState";
 import Dashboard from "./components/Dashboard";
@@ -15,6 +16,7 @@ export default function App() {
   const s = useStore();
   useEffect(() => {
     useStore.getState().init();
+    initSync();
   }, []);
 
   const d = derive({

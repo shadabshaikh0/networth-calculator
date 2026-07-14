@@ -59,3 +59,17 @@ export interface MemberModalDraft {
   relation?: string;
   color?: string;
 }
+
+/** The full set of user data we sync to (and load from) a Google Sheet. */
+export interface SnapshotData {
+  assets: Item[];
+  liab: Item[];
+  members: Member[];
+  included: Included;
+  rates: Rates;
+  onboardDismissed: boolean;
+}
+
+export type AuthStatus = "signedout" | "signingin" | "signedin";
+export type SyncStatus = "idle" | "syncing" | "synced" | "error";
+

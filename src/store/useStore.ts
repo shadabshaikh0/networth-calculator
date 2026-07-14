@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import type {
-  CatSel, Included, Item, Kind, Member, MemberModalDraft, Metal, ModalDraft, Rates, View,
+  AuthStatus, CatSel, Included, Item, Kind, Member, MemberModalDraft, Metal, ModalDraft,
+  Rates, SnapshotData, SyncStatus, View,
 } from "../types";
 import {
   DEFAULT_MEMBERS, DEFAULT_RATES, MEMBER_COLORS, SEED_ASSETS, SEED_LIAB,
@@ -23,8 +24,20 @@ interface State {
   onboardDismissed: boolean;
   liqView: boolean;
 
+  // cloud sync status
+  authStatus: AuthStatus;
+  syncStatus: SyncStatus;
+  account: { email?: string; name?: string } | null;
+  spreadsheetId: string | null;
+  syncError: string | null;
+
   // lifecycle
   init: () => void;
+
+  // cloud sync
+  setSync: (patch: Partial<Pick<State, "authStatus" | "syncStatus" | "account" | "spreadsheetId" | "syncError">>) => void;
+  hydrate: (data: SnapshotData) => void;
+  snapshot: () => SnapshotData;
 
   // helpers
   memberList: () => Member[];
@@ -121,6 +134,36 @@ export const useStore = create<State>((set, get) => ({
   rates: {},
   onboardDismissed: false,
   liqView: false,
+
+  authStatus: "signedout",
+  syncStatus: "idle",
+  account: null,
+  spreadsheetId: null,
+  syncError: null,
+
+  setSync: (patch) => set(patch),
+  hydrate: (data) => {
+    const members = data.members && data.members.length ? data.members.slice() : DEFAULT_MEMBERS.map((x) => ({ ...x }));
+    if (!members.some((m) => m.id === "self")) members.unshift({ id: "self", name: "You", relation: "Self", color: "#D5B475" });
+    const included: Included = { ...(data.included || {}) };
+    members.forEach((m) => { if (included[m.id] === undefined) included[m.id] = true; });
+    persist(data.assets, data.liab);
+    persistMemberList(members);
+    persistMembers(included);
+    persistRates(data.rates || {});
+    try { localStorage.setItem(ONBOARD_KEY, data.onboardDismissed ? "1" : "0"); } catch { /* ignore */ }
+    set({
+      assets: data.assets, liab: data.liab, members, included,
+      rates: data.rates || {}, onboardDismissed: !!data.onboardDismissed, loaded: true,
+    });
+  },
+  snapshot: () => {
+    const s = get();
+    return {
+      assets: s.assets, liab: s.liab, members: s.members,
+      included: s.included, rates: s.rates, onboardDismissed: s.onboardDismissed,
+    };
+  },
 
   init: () => {
     let assets: Item[] | null = null;
