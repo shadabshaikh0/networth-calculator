@@ -2,6 +2,7 @@ import { useStore } from "../store/useStore";
 import { clearToken, fetchUserInfo, requestToken } from "./googleAuth";
 import { createSheet, findSheet, loadAll, saveAll } from "./googleSheets";
 import { googleEnabled } from "./googleConfig";
+import { DEFAULT_MEMBERS, STORE_KEY } from "../constants";
 
 const SHEET_ID_KEY = "wint_nw_sheetid_v1";
 const ACCOUNT_KEY = "wint_nw_account_v1";
@@ -63,8 +64,18 @@ export async function signIn() {
       const data = await loadAll(id);
       useStore.getState().hydrate(data);
     } else {
-      // First time: create it and push whatever is local.
+      // First time creating this user's sheet.
       id = await createSheet();
+      // If the app is only showing the untouched demo seed (nothing persisted
+      // locally yet), don't push the sample portfolio into the user's real
+      // sheet — start them on a clean slate instead.
+      const untouchedSeed = !localStorage.getItem(STORE_KEY);
+      if (untouchedSeed) {
+        useStore.getState().hydrate({
+          assets: [], liab: [], members: [{ ...DEFAULT_MEMBERS[0] }],
+          included: {}, rates: {}, onboardDismissed: false,
+        });
+      }
       await saveAll(id, useStore.getState().snapshot());
     }
     cacheSheetId(id);

@@ -5,7 +5,8 @@
       "name": "networth-calculator",
       "runtimeExecutable": "npm",
       "runtimeArgs": ["run", "dev"],
-      "port": 8743
+      "port": 8743,
+      "autoPort": false
     }
   ]
 }
