@@ -48,10 +48,37 @@ it's a one-line fix in `public/_headers`.
 npm run build && npx wrangler pages deploy dist --project-name=networth-calculator
 ```
 
-## Alternative: Git-based deploys (optional, later)
-If you push this repo to GitHub, you can connect it in the Cloudflare Pages
-dashboard instead of uploading manually:
+## Auto-deploy on every push (GitHub Actions)
+
+`.github/workflows/deploy.yml` builds and deploys to Cloudflare Pages on every
+push to `main`. It needs three repository secrets:
+
+| Secret | Where to get it |
+| --- | --- |
+| `CLOUDFLARE_API_TOKEN` | Cloudflare dashboard → My Profile → API Tokens → Create Token → permission **Account · Cloudflare Pages · Edit** |
+| `CLOUDFLARE_ACCOUNT_ID` | Cloudflare dashboard → Workers & Pages → Account ID (right sidebar) |
+| `VITE_GOOGLE_CLIENT_ID` | Your Google OAuth Client ID (public; baked into the build) |
+
+Add them (paste each value when prompted):
+
+```bash
+gh secret set CLOUDFLARE_API_TOKEN
+gh secret set CLOUDFLARE_ACCOUNT_ID
+gh secret set VITE_GOOGLE_CLIENT_ID
+```
+
+(Or GitHub → repo → Settings → Secrets and variables → Actions.)
+
+Once the secrets exist, the next push deploys automatically — or trigger it now
+from the **Actions** tab (“Deploy to Cloudflare Pages” → Run workflow). After the
+first deploy, add the `*.pages.dev` URL to your Google OAuth **Authorized
+JavaScript origins**.
+
+## Alternative: Cloudflare's native Git integration (no tokens)
+Instead of the Action, you can connect the repo in the Cloudflare Pages dashboard
+(Workers & Pages → Create → Pages → Connect to Git):
 - Build command: `npm run build`
 - Build output directory: `dist`
 - Environment variable: `VITE_GOOGLE_CLIENT_ID` = your Client ID
-Then every push auto-deploys.
+
+Use one or the other — not both (they'd double-deploy).
