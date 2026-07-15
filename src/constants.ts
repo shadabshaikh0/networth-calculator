@@ -82,3 +82,4 @@ export const MEMBER_KEY = "wint_nw_members_v1";
 export const MEMBERLIST_KEY = "wint_nw_memberlist_v1";
 export const RATE_KEY = "wint_nw_rates_v1";
 export const ONBOARD_KEY = "wint_nw_onboard_v1";
+export const HISTORY_KEY = "wint_nw_history_v1";

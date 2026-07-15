@@ -1,11 +1,11 @@
 import {
-  ASSET_CATS, LIAB_CATS, DEFAULT_RATES, LIQUIDITY, METALS, MEMBER_COLORS,
-  RELATIONS, SEED_HISTORY,
+  ASSET_CATS, LIAB_CATS, DEFAULT_RATES, LIQUIDITY, METALS, MEMBER_COLORS, RELATIONS,
 } from "../constants";
 import type {
-  CatSel, CategoryDef, Included, Item, Kind, Member, MemberModalDraft, ModalDraft, Rates,
+  CatSel, CategoryDef, Included, Item, Kind, Member, MemberModalDraft, ModalDraft, Rates, Snapshot,
 } from "../types";
 import { compact, inr, tintFor } from "./format";
+import { monthLabel } from "./networth";
 
 interface DeriveInput {
   assets: Item[];
@@ -20,6 +20,8 @@ interface DeriveInput {
   catSel: CatSel | null;
   modal: ModalDraft | null;
   memberModal: MemberModalDraft | null;
+  history: Snapshot[];
+  currentMonth: string;
 }
 
 const catMetaOf = (list: CategoryDef[], key: string) => list.find((c) => c.key === key) || list[list.length - 1];
@@ -49,19 +51,24 @@ export function derive(state: DeriveInput) {
   const members = state.members && state.members.length ? state.members : [];
   const memberMeta = (id: string) => members.find((m) => m.id === id) || members[0];
 
-  // trend
-  const hist = SEED_HISTORY.concat([{ label: "Now", value: nw }]);
-  const histVals = hist.map((h) => h.value);
-  const hMin = Math.min(...histVals), hMax = Math.max(...histVals);
+  // trend — built from REAL recorded monthly snapshots; the current month is
+  // always the live net worth so it reflects unsaved edits instantly.
+  const past = (state.history || []).filter((h) => h.month !== state.currentMonth);
+  const points = [...past, { month: state.currentMonth, value: nw }];
+  const hasTrend = points.length >= 2; // need a prior point for a line / delta
+  const ptVals = points.map((p) => p.value);
+  const hMin = Math.min(...ptVals), hMax = Math.max(...ptVals);
   const span = hMax - hMin || 1;
-  const firstV = histVals[0];
-  const growthPct = firstV ? ((nw - firstV) / Math.abs(firstV)) * 100 : 0;
+  const spanYears = points.length > 1 && points[0].month.slice(0, 4) !== points[points.length - 1].month.slice(0, 4);
+  const firstV = ptVals[0];
+  const growthPct = hasTrend && firstV ? ((nw - firstV) / Math.abs(firstV)) * 100 : 0;
   const trendGrowthLabel = (growthPct >= 0 ? "▲ " : "▼ ") + Math.abs(growthPct).toFixed(1) + "%";
+  const firstMonthLabel = monthLabel(points[0].month, spanYears);
 
   const lineGeom = (W: number, H: number, pad: number) => {
-    const n = hist.length;
-    const xs = hist.map((_h, i) => (n === 1 ? W / 2 : pad + (i * (W - 2 * pad)) / (n - 1)));
-    const ys = hist.map((h) => H - pad - ((h.value - hMin) / span) * (H - 2 * pad));
+    const n = points.length;
+    const xs = points.map((_p, i) => (n === 1 ? W / 2 : pad + (i * (W - 2 * pad)) / (n - 1)));
+    const ys = points.map((p) => H - pad - ((p.value - hMin) / span) * (H - 2 * pad));
     const path = xs.map((x, i) => (i === 0 ? "M" : "L") + x.toFixed(1) + " " + ys[i].toFixed(1)).join(" ");
     const area = path + ` L${xs[xs.length - 1].toFixed(1)} ${H} L${xs[0].toFixed(1)} ${H} Z`;
     const dots = xs.map((x, i) => ({ cx: x.toFixed(1), cy: ys[i].toFixed(1), r: i === xs.length - 1 ? "5" : "3.5" }));
@@ -119,21 +126,23 @@ export function derive(state: DeriveInput) {
   if (totalLiab === 0) leverageLabel = "Debt-free — every rupee is yours.";
   else leverageLabel = `You owe ${Math.round((totalLiab / totalAssets) * 100)}% of what you own.`;
 
-  const histRows = hist.map((h, i) => {
-    const prev = i > 0 ? hist[i - 1].value : h.value;
-    const delta = h.value - prev;
+  const histRows = points.map((p, i) => {
+    const prev = i > 0 ? points[i - 1].value : p.value;
+    const delta = p.value - prev;
     return {
-      label: h.label,
-      valC: compact(h.value),
-      barW: (hMax ? Math.max(4, (h.value / hMax) * 100) : 0) + "%",
+      label: monthLabel(p.month, spanYears),
+      valC: compact(p.value),
+      barW: (hMax ? Math.max(4, (p.value / hMax) * 100) : 0) + "%",
       deltaLabel: i === 0 ? "—" : (delta >= 0 ? "+" : "") + compact(delta).replace("₹", ""),
       deltaColor: i === 0 ? "var(--nw-muted)" : delta >= 0 ? "var(--nw-green)" : "var(--nw-red)",
     };
   });
 
-  const prevNw = SEED_HISTORY[SEED_HISTORY.length - 1].value;
-  const monthDelta = nw - prevNw;
-  const deltaLabel = compact(Math.abs(monthDelta)) + " this month";
+  // "since <prev month>" delta — only shown once there's a prior real snapshot.
+  const prevPoint = hasTrend ? points[points.length - 2] : null;
+  const hasDelta = !!prevPoint;
+  const monthDelta = prevPoint ? nw - prevPoint.value : 0;
+  const deltaLabel = prevPoint ? compact(Math.abs(monthDelta)) + " since " + monthLabel(prevPoint.month, spanYears) : "";
   const deltaColor = monthDelta >= 0 ? "#8BF1A7" : "#FE817B";
   const deltaBg = monthDelta >= 0 ? "rgba(25,170,77,0.18)" : "rgba(216,100,93,0.18)";
   const deltaArrow = monthDelta >= 0 ? "▲" : "▼";
@@ -379,8 +388,8 @@ export function derive(state: DeriveInput) {
     avlAssetH, avlLiabH, leverageLabel,
     linePath: g1.path, lineArea: g1.area, lineDots: g1.dots,
     linePathTall: g2.path, lineAreaTall: g2.area, lineDotsTall: g2.dots,
-    lineLabels: hist.map((h) => h.label),
-    trendGrowthLabel, histRows,
+    lineLabels: points.map((p) => monthLabel(p.month, spanYears)),
+    trendGrowthLabel, histRows, hasTrend, hasDelta, firstMonthLabel,
     selVals, modalVals, memberModalVals,
   };
 }

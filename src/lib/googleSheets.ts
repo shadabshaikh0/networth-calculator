@@ -1,4 +1,4 @@
-import type { Included, Item, Member, Metal, Rates, SnapshotData } from "../types";
+import type { Included, Item, Member, Metal, Rates, Snapshot, SnapshotData } from "../types";
 import { APP_PROPERTY_KEY, APP_PROPERTY_VALUE, SCHEMA_VERSION, SHEET_TITLE } from "./googleConfig";
 import { getValidToken, requestToken } from "./googleAuth";
 
@@ -111,9 +111,10 @@ export async function loadAll(spreadsheetId: string): Promise<SnapshotData> {
   };
   const included = parseJson<Included>(meta.included, {});
   const rates = parseJson<Rates>(meta.rates, {});
+  const history = parseJson<Snapshot[]>(meta.history, []);
   const onboardDismissed = meta.onboardDismissed === "1";
 
-  return { assets, liab, members, included, rates, onboardDismissed };
+  return { assets, liab, members, included, rates, onboardDismissed, history };
 }
 
 /** Overwrite all tabs with the given snapshot (clear then write, 2 calls). */
@@ -127,6 +128,7 @@ export async function saveAll(spreadsheetId: string, data: SnapshotData): Promis
     ["currency", "INR"],
     ["included", JSON.stringify(data.included || {})],
     ["rates", JSON.stringify(data.rates || {})],
+    ["history", JSON.stringify(data.history || [])],
     ["onboardDismissed", data.onboardDismissed ? "1" : "0"],
   ];
   await api(`${SHEETS}/${spreadsheetId}/values:batchUpdate`, {

@@ -48,7 +48,9 @@ export default function Dashboard({ d }: { d: Derived }) {
           <div style={css("display:flex;align-items:center;gap:8px;color:#A8B6D6;font-size:12px;font-weight:500;letter-spacing:0.12em;text-transform:uppercase;")}>Total net worth</div>
           <div style={css("display:flex;align-items:flex-end;gap:14px;flex-wrap:wrap;margin-top:10px;")}>
             <div style={{ ...css("font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:56px;line-height:0.95;letter-spacing:-0.02em;"), color: d.heroNwColor }}>{d.nwFull}</div>
-            <div style={{ ...css("display:flex;align-items:center;gap:6px;padding:5px 10px;border-radius:999px;font-size:13px;font-weight:600;margin-bottom:8px;"), background: d.deltaBg, color: d.deltaColor }}>{d.deltaArrow} {d.deltaLabel}</div>
+            {d.hasDelta && (
+              <div style={{ ...css("display:flex;align-items:center;gap:6px;padding:5px 10px;border-radius:999px;font-size:13px;font-weight:600;margin-bottom:8px;"), background: d.deltaBg, color: d.deltaColor }}>{d.deltaArrow} {d.deltaLabel}</div>
+            )}
           </div>
           <div style={css("color:#96A6C9;font-size:13.5px;margin-top:8px;")}>{d.nwCompact} · updated just now</div>
           <div style={css("display:flex;gap:12px;flex-wrap:wrap;margin-top:22px;")}>
@@ -188,26 +190,32 @@ export default function Dashboard({ d }: { d: Derived }) {
       <div style={css("background:var(--nw-card,#141414);border:1px solid var(--nw-cardbd,#242424);border-radius:16px;padding:20px;margin-bottom:16px;box-shadow:var(--nw-cardsh,none);")}>
         <div style={css("display:flex;align-items:baseline;justify-content:space-between;flex-wrap:wrap;gap:8px;")}>
           <div style={css("font-size:11px;font-weight:600;letter-spacing:0.12em;color:var(--nw-text3,#7E7E7E);text-transform:uppercase;")}>Net worth over time</div>
-          <div style={css("font-size:12.5px;color:var(--nw-green,#8BF1A7);font-weight:500;")}>{d.trendGrowthLabel}</div>
+          {d.hasTrend && <div style={css("font-size:12.5px;color:var(--nw-green,#8BF1A7);font-weight:500;")}>{d.trendGrowthLabel} since {d.firstMonthLabel}</div>}
         </div>
-        <div style={css("margin-top:14px;position:relative;")}>
-          <svg width="100%" height="180" viewBox="0 0 640 200" preserveAspectRatio="none" style={{ display: "block", overflow: "visible" }}>
-            <defs><linearGradient id="nwArea" x1="0" y1="0" x2="0" y2="1"><stop offset="0" style={{ stopColor: "var(--nw-gold,#D5B475)", stopOpacity: 0.28 }} /><stop offset="1" style={{ stopColor: "var(--nw-gold,#D5B475)", stopOpacity: 0 }} /></linearGradient></defs>
-            <line x1="0" y1="50" x2="640" y2="50" style={{ stroke: "var(--nw-grid,#1E1E1E)" }} strokeWidth="1" />
-            <line x1="0" y1="100" x2="640" y2="100" style={{ stroke: "var(--nw-grid,#1E1E1E)" }} strokeWidth="1" />
-            <line x1="0" y1="150" x2="640" y2="150" style={{ stroke: "var(--nw-grid,#1E1E1E)" }} strokeWidth="1" />
-            <path d={d.lineArea} fill="url(#nwArea)" />
-            <path d={d.linePath} fill="none" style={{ stroke: "var(--nw-gold,#D5B475)" }} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
-            {d.lineDots.map((dot, i) => (
-              <circle key={i} cx={dot.cx} cy={dot.cy} r={dot.r} style={{ fill: "var(--nw-bg,#0B0B0B)", stroke: "var(--nw-gold,#D5B475)" }} strokeWidth="2.5" />
-            ))}
-          </svg>
-          <div style={css("display:flex;justify-content:space-between;margin-top:8px;")}>
-            {d.lineLabels.map((lb, i) => (
-              <span key={i} style={css("font-size:10.5px;color:var(--nw-muted,#6E6E6E);")}>{lb}</span>
-            ))}
+        {d.hasTrend ? (
+          <div style={css("margin-top:14px;position:relative;")}>
+            <svg width="100%" height="180" viewBox="0 0 640 200" preserveAspectRatio="none" style={{ display: "block", overflow: "visible" }}>
+              <defs><linearGradient id="nwArea" x1="0" y1="0" x2="0" y2="1"><stop offset="0" style={{ stopColor: "var(--nw-gold,#D5B475)", stopOpacity: 0.28 }} /><stop offset="1" style={{ stopColor: "var(--nw-gold,#D5B475)", stopOpacity: 0 }} /></linearGradient></defs>
+              <line x1="0" y1="50" x2="640" y2="50" style={{ stroke: "var(--nw-grid,#1E1E1E)" }} strokeWidth="1" />
+              <line x1="0" y1="100" x2="640" y2="100" style={{ stroke: "var(--nw-grid,#1E1E1E)" }} strokeWidth="1" />
+              <line x1="0" y1="150" x2="640" y2="150" style={{ stroke: "var(--nw-grid,#1E1E1E)" }} strokeWidth="1" />
+              <path d={d.lineArea} fill="url(#nwArea)" />
+              <path d={d.linePath} fill="none" style={{ stroke: "var(--nw-gold,#D5B475)" }} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+              {d.lineDots.map((dot, i) => (
+                <circle key={i} cx={dot.cx} cy={dot.cy} r={dot.r} style={{ fill: "var(--nw-bg,#0B0B0B)", stroke: "var(--nw-gold,#D5B475)" }} strokeWidth="2.5" />
+              ))}
+            </svg>
+            <div style={css("display:flex;justify-content:space-between;margin-top:8px;")}>
+              {d.lineLabels.map((lb, i) => (
+                <span key={i} style={css("font-size:10.5px;color:var(--nw-muted,#6E6E6E);")}>{lb}</span>
+              ))}
+            </div>
           </div>
-        </div>
+        ) : (
+          <div style={css("margin-top:16px;padding:26px 4px;text-align:center;color:var(--nw-text3,#8A8A8A);font-size:13px;line-height:1.55;")}>
+            Your net worth trend builds up as you track over time.<br />This month is your first data point — check back next month to see the line grow.
+          </div>
+        )}
       </div>
 
       {/* ASSETS & LIABILITIES COLUMNS */}

@@ -1,13 +1,14 @@
 import { create } from "zustand";
 import type {
   AuthStatus, CatSel, Included, Item, Kind, Member, MemberModalDraft, Metal, ModalDraft,
-  Rates, SnapshotData, SyncStatus, View,
+  Rates, Snapshot, SnapshotData, SyncStatus, View,
 } from "../types";
 import {
   DEFAULT_MEMBERS, DEFAULT_RATES, MEMBER_COLORS, SEED_ASSETS, SEED_LIAB,
   ASSET_CATS, LIAB_CATS,
-  STORE_KEY, THEME_KEY, MEMBER_KEY, MEMBERLIST_KEY, RATE_KEY, ONBOARD_KEY,
+  STORE_KEY, THEME_KEY, MEMBER_KEY, MEMBERLIST_KEY, RATE_KEY, ONBOARD_KEY, HISTORY_KEY,
 } from "../constants";
+import { netWorthOf } from "../lib/networth";
 
 interface State {
   assets: Item[];
@@ -23,6 +24,7 @@ interface State {
   rates: Rates;
   onboardDismissed: boolean;
   liqView: boolean;
+  history: Snapshot[];
 
   // cloud sync status
   authStatus: AuthStatus;
@@ -38,6 +40,9 @@ interface State {
   setSync: (patch: Partial<Pick<State, "authStatus" | "syncStatus" | "account" | "spreadsheetId" | "syncError">>) => void;
   hydrate: (data: SnapshotData) => void;
   snapshot: () => SnapshotData;
+
+  // net-worth history
+  recordSnapshot: (month: string) => void;
 
   // helpers
   memberList: () => Member[];
@@ -111,6 +116,9 @@ const persistMemberList = (members: Member[]) => {
 const persistRates = (rates: Rates) => {
   try { localStorage.setItem(RATE_KEY, JSON.stringify(rates)); } catch { /* ignore */ }
 };
+const persistHistory = (history: Snapshot[]) => {
+  try { localStorage.setItem(HISTORY_KEY, JSON.stringify(history)); } catch { /* ignore */ }
+};
 const applyBodyBg = (theme: "dark" | "light") => {
   try { document.body.style.background = theme === "light" ? "#F1F1EE" : "#0B0B0B"; } catch { /* ignore */ }
 };
@@ -134,6 +142,7 @@ export const useStore = create<State>((set, get) => ({
   rates: {},
   onboardDismissed: false,
   liqView: false,
+  history: [],
 
   authStatus: "signedout",
   syncStatus: "idle",
@@ -151,19 +160,37 @@ export const useStore = create<State>((set, get) => ({
     persistMemberList(members);
     persistMembers(included);
     persistRates(data.rates || {});
+    const history = Array.isArray(data.history) ? data.history.slice() : [];
+    persistHistory(history);
     try { localStorage.setItem(ONBOARD_KEY, data.onboardDismissed ? "1" : "0"); } catch { /* ignore */ }
     set({
       assets: data.assets, liab: data.liab, members, included,
-      rates: data.rates || {}, onboardDismissed: !!data.onboardDismissed, loaded: true,
+      rates: data.rates || {}, onboardDismissed: !!data.onboardDismissed, history, loaded: true,
     });
   },
   snapshot: () => {
     const s = get();
     return {
       assets: s.assets, liab: s.liab, members: s.members,
-      included: s.included, rates: s.rates, onboardDismissed: s.onboardDismissed,
+      included: s.included, rates: s.rates, onboardDismissed: s.onboardDismissed, history: s.history,
     };
   },
+  recordSnapshot: (month) => set((s) => {
+    // Don't record while there's nothing to track (keeps onboarding out of history).
+    if (s.assets.length === 0 && s.liab.length === 0) return {};
+    const value = netWorthOf(s.assets, s.liab, s.included, s.rates);
+    const history = s.history.slice();
+    const idx = history.findIndex((h) => h.month === month);
+    if (idx >= 0) {
+      if (history[idx].value === value) return {}; // no change
+      history[idx] = { month, value };
+    } else {
+      history.push({ month, value });
+    }
+    history.sort((a, b) => a.month.localeCompare(b.month));
+    persistHistory(history);
+    return { history };
+  }),
 
   init: () => {
     let assets: Item[] | null = null;
@@ -173,6 +200,7 @@ export const useStore = create<State>((set, get) => ({
     let members: Member[] | null = null;
     let rates: Rates = {};
     let onboardDismissed = false;
+    let history: Snapshot[] = [];
     try {
       const raw = localStorage.getItem(STORE_KEY);
       if (raw) { const d = JSON.parse(raw); assets = d.assets; liab = d.liab; }
@@ -184,6 +212,8 @@ export const useStore = create<State>((set, get) => ({
       if (ml) { const arr = JSON.parse(ml); if (Array.isArray(arr) && arr.length) members = arr; }
       const rr = localStorage.getItem(RATE_KEY);
       if (rr) rates = JSON.parse(rr);
+      const hh = localStorage.getItem(HISTORY_KEY);
+      if (hh) { const arr = JSON.parse(hh); if (Array.isArray(arr)) history = arr; }
       if (localStorage.getItem(ONBOARD_KEY) === "1") onboardDismissed = true;
     } catch { /* ignore */ }
 
@@ -200,7 +230,7 @@ export const useStore = create<State>((set, get) => ({
     else { members.forEach((m) => { if (included![m.id] === undefined) included![m.id] = true; }); }
 
     applyBodyBg(theme);
-    set({ assets, liab, theme, included, members, rates, onboardDismissed, loaded: true });
+    set({ assets, liab, theme, included, members, rates, onboardDismissed, history, loaded: true });
   },
 
   memberList: () => {

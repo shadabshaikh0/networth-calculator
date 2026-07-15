@@ -60,6 +60,12 @@ export interface MemberModalDraft {
   color?: string;
 }
 
+/** One recorded net-worth data point, keyed by calendar month (YYYY-MM). */
+export interface Snapshot {
+  month: string;
+  value: number;
+}
+
 /** The full set of user data we sync to (and load from) a Google Sheet. */
 export interface SnapshotData {
   assets: Item[];
@@ -68,6 +74,7 @@ export interface SnapshotData {
   included: Included;
   rates: Rates;
   onboardDismissed: boolean;
+  history: Snapshot[];
 }
 
 export type AuthStatus = "signedout" | "signingin" | "signedin";

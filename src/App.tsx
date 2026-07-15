@@ -4,6 +4,7 @@ import { DARK_VARS, LIGHT_VARS } from "./constants";
 import { derive } from "./lib/derive";
 import { useStore } from "./store/useStore";
 import { initSync } from "./lib/sync";
+import { initHistory } from "./lib/history";
 import TopBar from "./components/TopBar";
 import EmptyState from "./components/EmptyState";
 import Dashboard from "./components/Dashboard";
@@ -16,6 +17,7 @@ export default function App() {
   const s = useStore();
   useEffect(() => {
     useStore.getState().init();
+    initHistory();
     initSync();
   }, []);
 
@@ -24,6 +26,7 @@ export default function App() {
     included: s.included, members: s.members, rates: s.rates,
     onboardDismissed: s.onboardDismissed, view: s.view,
     catSel: s.catSel, modal: s.modal, memberModal: s.memberModal,
+    history: s.history, currentMonth: new Date().toISOString().slice(0, 7),
   });
 
   const themeVars = d.dark ? DARK_VARS : LIGHT_VARS;

@@ -15,6 +15,8 @@ const GoogleG = () => (
 const dotColor = (status: string) =>
   status === "synced" ? "#19AA4D" : status === "syncing" ? "#D5B475" : status === "error" ? "#D8645D" : "#8A8A8A";
 
+const pill = "display:inline-flex;align-items:center;gap:7px;height:34px;padding:0 14px;border:1px solid var(--nw-cardbd,#242424);border-radius:999px;background:transparent;font-size:12.5px;font-weight:600;cursor:pointer;";
+
 export default function SyncButton() {
   const authStatus = useStore((s) => s.authStatus);
   const syncStatus = useStore((s) => s.syncStatus);
@@ -34,28 +36,42 @@ export default function SyncButton() {
     const label = account?.email || account?.name || "Signed in";
     const statusText = syncStatus === "syncing" ? "Syncing…" : syncStatus === "error" ? "Sync error" : "Synced";
     return (
-      <button
-        data-noprint
-        onClick={signOut}
-        title={syncError ? `Sign out · ${syncError}` : `${statusText} to your Google Sheet · click to sign out`}
-        style={css("display:inline-flex;align-items:center;gap:8px;height:34px;padding:0 13px;border:1px solid var(--nw-cardbd,#242424);border-radius:999px;background:transparent;color:var(--nw-text2,#B1B1B1);font-size:12.5px;font-weight:500;cursor:pointer;max-width:230px;")}
-      >
-        <span style={{ ...css("width:7px;height:7px;border-radius:999px;flex-shrink:0;"), background: dotColor(syncStatus) }} />
-        <span style={css("white-space:nowrap;overflow:hidden;text-overflow:ellipsis;")}>{label}</span>
+      <div data-noprint style={css("display:inline-flex;align-items:center;gap:8px;")}>
+        <span
+          title={syncError ? `${statusText}: ${syncError}` : `${statusText} to your Google Sheet`}
+          style={css("display:inline-flex;align-items:center;gap:8px;height:34px;padding:0 13px;border:1px solid var(--nw-cardbd,#242424);border-radius:999px;color:var(--nw-text2,#B1B1B1);font-size:12.5px;font-weight:500;max-width:220px;")}
+        >
+          <span style={{ ...css("width:7px;height:7px;border-radius:999px;flex-shrink:0;"), background: dotColor(syncStatus) }} />
+          <span style={css("white-space:nowrap;overflow:hidden;text-overflow:ellipsis;")}>{label}</span>
+        </span>
+        <button onClick={signOut} title="Sign out" style={css("display:inline-flex;align-items:center;gap:6px;height:34px;padding:0 13px;border:1px solid var(--nw-cardbd,#242424);border-radius:999px;background:transparent;color:var(--nw-text2,#B1B1B1);font-size:12.5px;font-weight:500;cursor:pointer;")}>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9" /></svg>
+          Sign out
+        </button>
+      </div>
+    );
+  }
+
+  if (authStatus === "signingin") {
+    return (
+      <button data-noprint disabled style={css(pill + "color:var(--nw-text,#fff);opacity:0.6;cursor:default;")}>
+        <GoogleG /> Signing in…
       </button>
     );
   }
 
-  const signingIn = authStatus === "signingin";
+  // signed out — if we have a cached account from a prior session, offer Reconnect.
+  if (account?.email || account?.name) {
+    return (
+      <button data-noprint onClick={signIn} title={`Reconnect ${account.email || account.name} to sync`} style={css(pill + "color:var(--nw-text,#fff);")}>
+        <GoogleG /> Reconnect
+      </button>
+    );
+  }
+
   return (
-    <button
-      data-noprint
-      onClick={signIn}
-      disabled={signingIn}
-      title="Store your data in your own Google Sheet"
-      style={css(`display:inline-flex;align-items:center;gap:7px;height:34px;padding:0 14px;border:1px solid var(--nw-cardbd,#242424);border-radius:999px;background:transparent;color:var(--nw-text,#fff);font-size:12.5px;font-weight:600;cursor:${signingIn ? "default" : "pointer"};opacity:${signingIn ? "0.6" : "1"};`)}
-    >
-      <GoogleG /> {signingIn ? "Signing in…" : "Sign in with Google"}
+    <button data-noprint onClick={signIn} title="Store your data in your own Google Sheet" style={css(pill + "color:var(--nw-text,#fff);")}>
+      <GoogleG /> Sign in with Google
     </button>
   );
 }

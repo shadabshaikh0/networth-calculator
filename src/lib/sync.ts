@@ -45,19 +45,12 @@ function schedulePush() {
   pushTimer = setTimeout(() => { void pushNow(); }, 1200);
 }
 
-/** Explicit "Sign in with Google" — interactive consent, then reconcile. */
-export async function signIn() {
-  if (!googleEnabled()) return;
-  const store = useStore.getState();
-  store.setSync({ authStatus: "signingin", syncError: null });
+/** Find (or create) the user's sheet and reconcile. Assumes already signed in.
+ *  A failure here does NOT sign the user out — it just surfaces a sync error. */
+async function syncFromRemote() {
+  if (useStore.getState().authStatus !== "signedin") return;
+  useStore.getState().setSync({ syncStatus: "syncing", syncError: null });
   try {
-    const token = await requestToken(true);
-    const account = await fetchUserInfo(token);
-    cacheAccount(account);
-    store.setSync({ authStatus: "signedin", account });
-
-    // Find (or create) this user's sheet, then reconcile.
-    store.setSync({ syncStatus: "syncing" });
     let id = cachedSheetId() || (await findSheet());
     if (id) {
       // Sheet is the source of truth once it exists.
@@ -73,7 +66,7 @@ export async function signIn() {
       if (untouchedSeed) {
         useStore.getState().hydrate({
           assets: [], liab: [], members: [{ ...DEFAULT_MEMBERS[0] }],
-          included: {}, rates: {}, onboardDismissed: false,
+          included: {}, rates: {}, onboardDismissed: false, history: [],
         });
       }
       await saveAll(id, useStore.getState().snapshot());
@@ -81,8 +74,28 @@ export async function signIn() {
     cacheSheetId(id);
     useStore.getState().setSync({ spreadsheetId: id, syncStatus: "synced" });
   } catch (e) {
-    useStore.getState().setSync({ authStatus: "signedout", syncStatus: "error", syncError: (e as Error).message });
+    // Stay signed in; the account chip shows a red dot + this message.
+    useStore.getState().setSync({ syncStatus: "error", syncError: (e as Error).message });
   }
+}
+
+/** Explicit "Sign in with Google" — interactive consent, then reconcile. */
+export async function signIn() {
+  if (!googleEnabled()) return;
+  useStore.getState().setSync({ authStatus: "signingin", syncError: null });
+  let token: string;
+  try {
+    token = await requestToken(true);
+  } catch (e) {
+    // Auth itself failed (popup closed, origin not allowlisted, etc.)
+    useStore.getState().setSync({ authStatus: "signedout", syncStatus: "error", syncError: (e as Error).message });
+    return;
+  }
+  // Auth succeeded — this state STICKS regardless of what the sheet step does.
+  const account = await fetchUserInfo(token);
+  cacheAccount(account);
+  useStore.getState().setSync({ authStatus: "signedin", account });
+  await syncFromRemote();
 }
 
 export function signOut() {
