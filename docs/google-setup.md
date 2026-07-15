@@ -5,7 +5,7 @@ client-side flow: **no API key, no client secret, no backend**. The only value
 you configure is a public **OAuth Client ID**.
 
 ## 1. Create a Google Cloud project
-- Go to <https://console.cloud.google.com/> → create a project (e.g. "Wint Net Worth").
+- Go to <https://console.cloud.google.com/> → create a project (e.g. "Net Worth Calculator").
 
 ## 2. Enable the APIs
 - APIs & Services → **Library** → enable **Google Sheets API** and **Google Drive API**.
@@ -42,7 +42,7 @@ Restart `npm run dev`. The top bar switches from **Local only** to
 ## What happens on first sign-in
 1. Google account chooser → consent (drive.file + identity).
 2. The app looks for its spreadsheet in your Drive (Drive `appProperties` marker).
-3. None found → it **creates** `Wint · Net worth data` with tabs
+3. None found → it **creates** `Net worth data` with tabs
    Assets / Liabilities / Members / Meta and pushes your current data up.
 4. Found → it **loads** that sheet (the sheet is the source of truth).
 5. After that, every edit is written back (debounced ~1.2s). The chip shows a

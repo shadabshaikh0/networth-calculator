@@ -4,8 +4,8 @@ import { createSheet, findSheet, loadAll, saveAll } from "./googleSheets";
 import { googleEnabled } from "./googleConfig";
 import { DEFAULT_MEMBERS, STORE_KEY } from "../constants";
 
-const SHEET_ID_KEY = "wint_nw_sheetid_v1";
-const ACCOUNT_KEY = "wint_nw_account_v1";
+const SHEET_ID_KEY = "networth_sheetid_v1";
+const ACCOUNT_KEY = "networth_account_v1";
 
 let pushTimer: ReturnType<typeof setTimeout> | null = null;
 let pushInFlight = false;

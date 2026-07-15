@@ -15,10 +15,10 @@ export const SCOPES = [
 
 // Marker we stamp on the Drive file so we can find "our" spreadsheet later
 // (works within drive.file because we created the file).
-export const APP_PROPERTY_KEY = "wintNetworth";
+export const APP_PROPERTY_KEY = "networthApp";
 export const APP_PROPERTY_VALUE = "1";
 
-export const SHEET_TITLE = "Wint · Net worth data";
+export const SHEET_TITLE = "Net worth data";
 export const SCHEMA_VERSION = "1";
 
 /** Whether Google integration is configured at all. */

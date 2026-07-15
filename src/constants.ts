@@ -42,7 +42,7 @@ export const METALS: { key: Metal; label: string; unit: string }[] = [
 ];
 
 export const SEED_ASSETS: Item[] = [
-  { id: "a1",  name: "Wint Bonds SIP",      cat: "bonds",      value: 250000,  owner: "self" },
+  { id: "a1",  name: "Bond fund SIP",       cat: "bonds",      value: 250000,  owner: "self" },
   { id: "a2",  name: "Zerodha equity",      cat: "stocks",     value: 680000,  owner: "self" },
   { id: "a3",  name: "Parag Parikh Flexi",  cat: "stocks",     value: 320000,  owner: "self" },
   { id: "a4",  name: "HDFC savings",        cat: "cash",       value: 145000,  owner: "self" },
@@ -76,10 +76,10 @@ export const DARK_VARS =
 export const LIGHT_VARS =
   "--nw-bg:#F1F1EE;--nw-card:#FFFFFF;--nw-cardbd:#E8E8E4;--nw-hair:#EDEDEA;--nw-text:#101010;--nw-text2:#4B4B4B;--nw-text3:#7E7E7E;--nw-muted:#9A9A9A;--nw-inputbg:#F7F7F5;--nw-inputbd:#DCDCD8;--nw-chipbd:#DCDCD8;--nw-btnbd:#DCDCD8;--nw-track:#E8E8E4;--nw-grid:#EAEAE6;--nw-cta-bg:#101010;--nw-cta-tx:#FFFFFF;--nw-topbar:rgba(241,241,238,0.9);--nw-topbd:#E5E5E1;--nw-gold:#8A6A2E;--nw-green:#178A3E;--nw-red:#C0392B;--nw-dash:#CFCFCB;--nw-icongrey:#A0A0A0;--nw-legend:#3A3A3A;--nw-cardsh:0 1px 3px rgba(0,0,0,0.06);";
 
-export const STORE_KEY = "wint_nw_v3";
-export const THEME_KEY = "wint_nw_theme_v1";
-export const MEMBER_KEY = "wint_nw_members_v1";
-export const MEMBERLIST_KEY = "wint_nw_memberlist_v1";
-export const RATE_KEY = "wint_nw_rates_v1";
-export const ONBOARD_KEY = "wint_nw_onboard_v1";
-export const HISTORY_KEY = "wint_nw_history_v1";
+export const STORE_KEY = "networth_v3";
+export const THEME_KEY = "networth_theme_v1";
+export const MEMBER_KEY = "networth_members_v1";
+export const MEMBERLIST_KEY = "networth_memberlist_v1";
+export const RATE_KEY = "networth_rates_v1";
+export const ONBOARD_KEY = "networth_onboard_v1";
+export const HISTORY_KEY = "networth_history_v1";
