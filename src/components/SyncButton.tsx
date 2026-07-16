@@ -2,6 +2,11 @@ import { css } from "../lib/style";
 import { useStore } from "../store/useStore";
 import { googleEnabled } from "../lib/googleConfig";
 import { signIn, signOut } from "../lib/sync";
+import { useIsMobile } from "../lib/useIsMobile";
+
+const LogoutIcon = () => (
+  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9" /></svg>
+);
 
 const GoogleG = () => (
   <svg width="15" height="15" viewBox="0 0 48 48" aria-hidden>
@@ -22,6 +27,7 @@ export default function SyncButton() {
   const syncStatus = useStore((s) => s.syncStatus);
   const account = useStore((s) => s.account);
   const syncError = useStore((s) => s.syncError);
+  const isMobile = useIsMobile();
 
   if (!googleEnabled()) {
     return (
@@ -35,6 +41,16 @@ export default function SyncButton() {
   if (authStatus === "signedin") {
     const label = account?.email || account?.name || "Signed in";
     const statusText = syncStatus === "syncing" ? "Syncing…" : syncStatus === "error" ? "Sync error" : "Synced";
+    const title = syncError ? `${statusText}: ${syncError}` : `${label} · ${statusText} to your Google Sheet · sign out`;
+    // Mobile: one compact button (status dot + logout icon), no email text.
+    if (isMobile) {
+      return (
+        <button data-noprint onClick={signOut} title={title} style={css("display:inline-flex;align-items:center;gap:7px;height:34px;padding:0 12px;border:1px solid var(--nw-cardbd,#242424);border-radius:999px;background:transparent;color:var(--nw-text2,#B1B1B1);cursor:pointer;flex-shrink:0;")}>
+          <span style={{ ...css("width:7px;height:7px;border-radius:999px;flex-shrink:0;"), background: dotColor(syncStatus) }} />
+          <LogoutIcon />
+        </button>
+      );
+    }
     return (
       <div data-noprint style={css("display:inline-flex;align-items:center;gap:8px;")}>
         <span
@@ -45,7 +61,7 @@ export default function SyncButton() {
           <span style={css("white-space:nowrap;overflow:hidden;text-overflow:ellipsis;")}>{label}</span>
         </span>
         <button onClick={signOut} title="Sign out" style={css("display:inline-flex;align-items:center;gap:6px;height:34px;padding:0 13px;border:1px solid var(--nw-cardbd,#242424);border-radius:999px;background:transparent;color:var(--nw-text2,#B1B1B1);font-size:12.5px;font-weight:500;cursor:pointer;")}>
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9" /></svg>
+          <LogoutIcon />
           Sign out
         </button>
       </div>
@@ -54,8 +70,8 @@ export default function SyncButton() {
 
   if (authStatus === "signingin") {
     return (
-      <button data-noprint disabled style={css(pill + "color:var(--nw-text,#fff);opacity:0.6;cursor:default;")}>
-        <GoogleG /> Signing in…
+      <button data-noprint disabled style={css(pill + "color:var(--nw-text,#fff);opacity:0.6;cursor:default;flex-shrink:0;")}>
+        <GoogleG /> {isMobile ? "…" : "Signing in…"}
       </button>
     );
   }
@@ -63,15 +79,15 @@ export default function SyncButton() {
   // signed out — if we have a cached account from a prior session, offer Reconnect.
   if (account?.email || account?.name) {
     return (
-      <button data-noprint onClick={signIn} title={`Reconnect ${account.email || account.name} to sync`} style={css(pill + "color:var(--nw-text,#fff);")}>
+      <button data-noprint onClick={signIn} title={`Reconnect ${account.email || account.name} to sync`} style={css(pill + "color:var(--nw-text,#fff);flex-shrink:0;")}>
         <GoogleG /> Reconnect
       </button>
     );
   }
 
   return (
-    <button data-noprint onClick={signIn} title="Store your data in your own Google Sheet" style={css(pill + "color:var(--nw-text,#fff);")}>
-      <GoogleG /> Sign in with Google
+    <button data-noprint onClick={signIn} title="Store your data in your own Google Sheet" style={css(pill + "color:var(--nw-text,#fff);flex-shrink:0;")}>
+      <GoogleG /> {isMobile ? "Sign in" : "Sign in with Google"}
     </button>
   );
 }

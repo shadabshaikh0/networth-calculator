@@ -35,7 +35,7 @@ export default function App() {
     <div style={{ ...css("min-height:100vh;background:var(--nw-bg,#0B0B0B);color:var(--nw-text,#fff);"), ...css(themeVars) }}>
       <TopBar d={d} />
 
-      <div style={css("max-width:1120px;margin:0 auto;padding:24px;")}>
+      <div style={css("max-width:1120px;margin:0 auto;padding:clamp(14px,4vw,24px);")}>
         {d.isEmpty && <EmptyState />}
 
         {d.showApp && (

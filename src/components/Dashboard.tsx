@@ -42,12 +42,12 @@ export default function Dashboard({ d }: { d: Derived }) {
       )}
 
       {/* HERO */}
-      <div style={css("position:relative;overflow:hidden;background:linear-gradient(135deg,#0A1F45 0%,#0B2960 52%,#122A6A 100%);border-radius:20px;padding:28px 28px 26px;margin-bottom:16px;box-shadow:inset 0 0 0 1px rgba(255,255,255,0.05);color:#fff;")}>
+      <div style={css("position:relative;overflow:hidden;background:linear-gradient(135deg,#0A1F45 0%,#0B2960 52%,#122A6A 100%);border-radius:20px;padding:clamp(18px,5vw,28px);margin-bottom:16px;box-shadow:inset 0 0 0 1px rgba(255,255,255,0.05);color:#fff;")}>
         <svg style={{ position: "absolute", inset: 0, width: "100%", height: "100%", opacity: 0.5 }} viewBox="0 0 600 220" preserveAspectRatio="none"><path d="M0,180 Q150,90 320,140 T600,110 L600,220 L0,220Z" fill="rgba(120,160,255,0.07)" /><path d="M0,190 Q180,120 360,160 T600,150" fill="none" stroke="rgba(180,200,255,0.16)" strokeWidth="1" /></svg>
         <div style={{ position: "relative", zIndex: 1 }}>
           <div style={css("display:flex;align-items:center;gap:8px;color:#A8B6D6;font-size:12px;font-weight:500;letter-spacing:0.12em;text-transform:uppercase;")}>Total net worth</div>
           <div style={css("display:flex;align-items:flex-end;gap:14px;flex-wrap:wrap;margin-top:10px;")}>
-            <div style={{ ...css("font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:56px;line-height:0.95;letter-spacing:-0.02em;"), color: d.heroNwColor }}>{d.nwFull}</div>
+            <div style={{ ...css("font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:clamp(32px,10vw,56px);line-height:0.95;letter-spacing:-0.02em;word-break:break-word;"), color: d.heroNwColor }}>{d.nwFull}</div>
             {d.hasDelta && (
               <div style={{ ...css("display:flex;align-items:center;gap:6px;padding:5px 10px;border-radius:999px;font-size:13px;font-weight:600;margin-bottom:8px;"), background: d.deltaBg, color: d.deltaColor }}>{d.deltaArrow} {d.deltaLabel}</div>
             )}

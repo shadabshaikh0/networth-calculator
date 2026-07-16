@@ -7,7 +7,7 @@ export default function HistoryView({ d }: { d: Derived }) {
       <div style={css("background:var(--nw-card,#141414);border:1px solid var(--nw-cardbd,#242424);border-radius:16px;padding:24px;margin-bottom:16px;box-shadow:var(--nw-cardsh,none);")}>
         <div style={css("font-size:11px;font-weight:600;letter-spacing:0.12em;color:var(--nw-text3,#7E7E7E);text-transform:uppercase;")}>Net worth journey</div>
         <div style={css("display:flex;align-items:flex-end;gap:14px;margin-top:8px;flex-wrap:wrap;")}>
-          <div style={{ ...css("font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:44px;letter-spacing:-0.02em;"), color: d.nwColor }}>{d.nwFull}</div>
+          <div style={{ ...css("font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:clamp(30px,9vw,44px);letter-spacing:-0.02em;word-break:break-word;"), color: d.nwColor }}>{d.nwFull}</div>
           {d.hasTrend && <div style={css("color:var(--nw-green,#8BF1A7);font-size:14px;font-weight:500;margin-bottom:10px;")}>{d.trendGrowthLabel} since {d.firstMonthLabel}</div>}
         </div>
         {d.hasTrend ? (

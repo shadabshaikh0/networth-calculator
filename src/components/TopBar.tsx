@@ -1,20 +1,22 @@
 import { css } from "../lib/style";
 import { useStore } from "../store/useStore";
 import type { Derived } from "../lib/derive";
+import { useIsMobile } from "../lib/useIsMobile";
 import SyncButton from "./SyncButton";
 
 export default function TopBar({ d }: { d: Derived }) {
   const setDark = useStore((s) => s.setDark);
   const setLight = useStore((s) => s.setLight);
+  const isMobile = useIsMobile();
   return (
     <div style={css("position:sticky;top:0;z-index:20;background:var(--nw-topbar,rgba(11,11,11,0.86));backdrop-filter:blur(12px);border-bottom:1px solid var(--nw-topbd,#1C1C1C);")}>
-      <div style={css("max-width:1120px;margin:0 auto;padding:16px 24px;display:flex;align-items:center;gap:14px;")}>
+      <div style={css(`max-width:1120px;margin:0 auto;padding:${isMobile ? "12px 14px" : "16px 24px"};display:flex;align-items:center;gap:${isMobile ? "8px" : "14px"};`)}>
         <span style={css("width:34px;height:34px;border-radius:10px;background:var(--nw-card,#141414);border:1px solid var(--nw-cardbd,#242424);display:flex;align-items:center;justify-content:center;flex-shrink:0;")}>
           <svg width="19" height="19" viewBox="0 0 24 24" fill="none" style={{ stroke: "var(--nw-gold,#D5B475)" }} strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d="M4 16l4-5 3 3 5-8" /><path d="M4 20h16" /></svg>
         </span>
-        <div style={css("display:flex;flex-direction:column;line-height:1.15;")}>
+        <div style={css("display:flex;flex-direction:column;line-height:1.15;min-width:0;")}>
           <span style={css("font-family:'Lora',serif;font-size:18px;font-weight:500;")}>Net worth</span>
-          <span style={css("font-size:11.5px;color:var(--nw-text3,#8A8A8A);")}>Track everything you own &amp; owe</span>
+          {!isMobile && <span style={css("font-size:11.5px;color:var(--nw-text3,#8A8A8A);")}>Track everything you own &amp; owe</span>}
         </div>
         <div style={{ flex: 1 }} />
         <SyncButton />
