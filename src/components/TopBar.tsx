@@ -15,7 +15,7 @@ export default function TopBar({ d }: { d: Derived }) {
           <svg width="19" height="19" viewBox="0 0 24 24" fill="none" style={{ stroke: "var(--nw-gold,#D5B475)" }} strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d="M4 16l4-5 3 3 5-8" /><path d="M4 20h16" /></svg>
         </span>
         <div style={css("display:flex;flex-direction:column;line-height:1.15;min-width:0;")}>
-          <span style={css("font-family:'Lora',serif;font-size:18px;font-weight:500;")}>Net worth</span>
+          <span style={css("font-family:'Lora',serif;font-size:18px;font-weight:500;")}>Net Worth Calculator</span>
           {!isMobile && <span style={css("font-size:11.5px;color:var(--nw-text3,#8A8A8A);")}>Track everything you own &amp; owe</span>}
         </div>
         <div style={{ flex: 1 }} />
