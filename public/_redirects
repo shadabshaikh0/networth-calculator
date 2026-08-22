@@ -1,2 +1,6 @@
+# Serve the Google verification file at its exact .html path with 200 (no clean-URL
+# redirect), so Search Console's HTML-file check reads it directly.
+/google999d9d0045f1a6c7.html    /google999d9d0045f1a6c7.html    200
+
 # SPA fallback: serve index.html for any unmatched path (200, no redirect).
 /*    /index.html   200
