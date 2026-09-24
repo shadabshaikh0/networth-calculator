@@ -1,7 +1,8 @@
 import type { CategoryDef, Item, Member, Metal } from "./types";
 
 export const ASSET_CATS: CategoryDef[] = [
-  { key: "bonds",      label: "Bonds & fixed income",  color: "#D5B475", iconPath: "M5 4h13v16l-3-2-3 2-3-2-1 1zM8 8h7M8 12h5" },
+  { key: "bonds",      label: "Bonds",                 color: "#D5B475", iconPath: "M5 4h13v16l-3-2-3 2-3-2-1 1zM8 8h7M8 12h5" },
+  { key: "fixed_deposits", label: "Fixed deposits",    color: "#2DB7A3", iconPath: "M4 6h16v14H4zM4 10h16M8 4v4M16 4v4" },
   { key: "stocks",     label: "Stocks & mutual funds", color: "#417CF1", iconPath: "M4 16l4-5 3 3 5-8 4 5M4 20h16" },
   { key: "cash",       label: "Cash & bank",           color: "#19AA4D", iconPath: "M3 8h18v10H3zM3 8l2-3h14l2 3M15 13h3" },
   { key: "epf",        label: "EPF / PPF / retirement", color: "#6FCAFF", iconPath: "M12 3l7 3v5c0 4-3 7-7 8-4-1-7-4-7-8V6z" },
@@ -31,7 +32,7 @@ export const RELATIONS = ["Spouse", "Father", "Mother", "Son", "Daughter", "Sibl
 
 /** which asset categories can be reached quickly in an emergency */
 export const LIQUIDITY: Record<string, "liquid" | "locked"> = {
-  cash: "liquid", stocks: "liquid", gold: "liquid", bonds: "liquid",
+  cash: "liquid", stocks: "liquid", gold: "liquid", bonds: "liquid", fixed_deposits: "liquid",
   epf: "locked", realestate: "locked", vehicles: "locked", other_a: "locked",
 };
 
